@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.3] - 2026-05-24
+
+### Fixed
+- Switched the nginx upstream from a Unix socket to `127.0.0.1:7682` so ttyd no longer depends on socket permission compatibility
+- Expanded the ingress allowlist from a single hard-coded Supervisor IP to private network ranges used by Home Assistant installations
+
 ## [0.2.2] - 2026-05-24
 
 ### Fixed
