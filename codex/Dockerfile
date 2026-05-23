@@ -1,10 +1,10 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
-LABEL maintainer="Robson Felix"
+LABEL maintainer="Kecks Digital"
 LABEL org.opencontainers.image.title="Codex for Home Assistant"
-LABEL org.opencontainers.image.description="OpenAI Codex CLI with web terminal and Home Assistant integration"
-LABEL org.opencontainers.image.source="https://github.com/robsonfelix/robsonfelix-hass-addons"
+LABEL org.opencontainers.image.description="OpenAI Codex for the Home Assistant sidebar with per-user sessions and optional MCP access"
+LABEL org.opencontainers.image.source="https://github.com/kecksdigital/codex-hass"
 LABEL org.opencontainers.image.licenses="MIT"
 
 ENV \

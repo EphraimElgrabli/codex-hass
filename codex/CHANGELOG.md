@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-05-24
+
+### Changed
+- Rewrote the Codex documentation to explain installation, per-user sessions, MCP wiring, persistence, and everyday usage more clearly
+- Replaced upstream repository links and metadata with the `kecksdigital/codex-hass` repository
+- Updated the add-on branding, description, and panel icon so the Codex add-on no longer ships with Claude-oriented presentation
+
 ## [0.2.0] - 2026-05-23
 
 ### Added
