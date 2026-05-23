@@ -149,7 +149,7 @@ fi
 
 cat > /tmp/codex-nginx.conf <<'EOF'
 worker_processes 1;
-error_log /dev/stderr info;
+error_log /dev/stderr warn;
 pid /tmp/codex-nginx/nginx.pid;
 
 events {
@@ -173,6 +173,7 @@ http {
         listen 7681;
 
         location = /healthz {
+            access_log off;
             allow 127.0.0.1;
             allow ::1;
             deny all;

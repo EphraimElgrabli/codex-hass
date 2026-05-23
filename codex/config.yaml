@@ -1,6 +1,6 @@
 name: Codex
 description: OpenAI Codex in Home Assistant with per-user sessions, persistent terminals, and optional Home Assistant MCP access
-version: "0.2.3"
+version: "0.2.4"
 slug: codex
 url: https://github.com/kecksdigital/codex-hass
 arch:
