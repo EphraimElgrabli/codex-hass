@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.9] - 2026-05-24
+
+### Changed
+- Rewrote Codex documentation as a standalone Home Assistant App guide with first-run authentication, model, access, MCP, persistence, and update guidance
+- Changed new installs to start with `session_persistence` disabled for a cleaner first sign-in flow
+- Reduced tmux history, ttyd client count, and ttyd scrollback for safer startup on smaller Home Assistant systems
+- Increased healthcheck startup grace and capped Node heap usage to improve reliability during heavier Codex CLI starts
+
+### Added
+- Added optional bounded Codex CLI startup updates with `auto_update_codex` and `codex_update_timeout`
+- Added startup validation for the generated Codex config when the installed CLI exposes `codex debug prompt-input`
+- Added SHA256 verification for downloaded `ttyd` binaries
+
+### Fixed
+- Sanitized terminal font size and update timeout values before using them in startup commands
+- Prevented optional Codex CLI runtime updates from inheriting the Home Assistant Supervisor token
+- Removed unnecessary `net_admin` from the AppArmor profile
+
 ## [0.2.8] - 2026-05-24
 
 ### Changed

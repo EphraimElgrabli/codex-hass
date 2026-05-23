@@ -2,15 +2,17 @@ ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
 LABEL maintainer="Kecks Digital"
-LABEL org.opencontainers.image.title="Codex for Home Assistant"
-LABEL org.opencontainers.image.description="OpenAI Codex for the Home Assistant sidebar with persistent terminal sessions and optional MCP access"
+LABEL org.opencontainers.image.title="Codex App for Home Assistant"
+LABEL org.opencontainers.image.description="OpenAI Codex App for the Home Assistant sidebar with terminal access, model controls, and optional MCP integration"
 LABEL org.opencontainers.image.source="https://github.com/kecksdigital/codex-hass"
 LABEL org.opencontainers.image.licenses="MIT"
 
 ENV \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
-    TERM=xterm-256color
+    TERM=xterm-256color \
+    NODE_OPTIONS=--max-old-space-size=512 \
+    NPM_CONFIG_CACHE=/root/.npm
 
 RUN apk add --no-cache \
     acl \
@@ -43,11 +45,12 @@ RUN apk add --no-cache \
 
 ARG BUILD_ARCH
 RUN case "${BUILD_ARCH}" in \
-        amd64) TTYD_ARCH="x86_64" ;; \
-        aarch64) TTYD_ARCH="aarch64" ;; \
-        *) TTYD_ARCH="x86_64" ;; \
+        amd64) TTYD_ARCH="x86_64"; TTYD_SHA256="8a217c968aba172e0dbf3f34447218dc015bc4d5e59bf51db2f2cd12b7be4f55" ;; \
+        aarch64) TTYD_ARCH="aarch64"; TTYD_SHA256="b38acadd89d1d396a0f5649aa52c539edbad07f4bc7348b27b4f4b7219dd4165" ;; \
+        *) echo "Unsupported arch: ${BUILD_ARCH}" && exit 1 ;; \
     esac && \
     curl -fsSL "https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.${TTYD_ARCH}" -o /usr/bin/ttyd && \
+    echo "${TTYD_SHA256}  /usr/bin/ttyd" | sha256sum -c - && \
     chmod +x /usr/bin/ttyd
 
 RUN npm install -g @openai/codex \
@@ -82,9 +85,12 @@ RUN chmod +x \
     && chmod 440 /etc/sudoers.d/codex-hass-mcp
 
 RUN cat > /etc/tmux.conf << 'EOF'
-set -g history-limit 20000
+set -g history-limit 5000
 set -ga terminal-overrides ',xterm*:smcup@:rmcup@'
 set -g mouse on
+set -g xterm-keys on
+set -s set-clipboard on
+set -g allow-passthrough on
 bind -n WheelUpPane if-shell -F -t = "#{mouse_any_flag}" "send-keys -M" "if -Ft= '#{pane_in_mode}' 'send-keys -M' 'select-pane -t=; copy-mode -e; send-keys -M'"
 bind -n WheelDownPane select-pane -t= \; send-keys -M
 EOF
@@ -108,7 +114,7 @@ ENV PATH="/root/.local/bin:${PATH}"
 
 WORKDIR /homeassistant
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=5 \
     CMD curl -sf http://localhost:7681/ >/dev/null || exit 1
 
 ENTRYPOINT []

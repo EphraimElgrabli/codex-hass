@@ -91,10 +91,14 @@ def main():
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config = load_existing_config(config_path)
 
-    metadata = config.setdefault("__homeassistant_addon", {})
+    legacy_metadata = config.pop("__homeassistant_addon", None)
+    if "__homeassistant_app" not in config and isinstance(legacy_metadata, dict):
+        config["__homeassistant_app"] = legacy_metadata
+
+    metadata = config.setdefault("__homeassistant_app", {})
     if not isinstance(metadata, dict):
         metadata = {}
-        config["__homeassistant_addon"] = metadata
+        config["__homeassistant_app"] = metadata
 
     previous_managed_model = metadata.get("managed_model")
     if default_model:
@@ -160,11 +164,11 @@ def main():
     if not mcp_servers:
         config.pop("mcp_servers", None)
     if not metadata:
-        config.pop("__homeassistant_addon", None)
+        config.pop("__homeassistant_app", None)
 
     lines = [
         "# Codex user configuration",
-        "# Managed Home Assistant defaults are merged into this file by the add-on.",
+        "# Managed Home Assistant defaults are merged into this file by the Codex App.",
         "# Project-specific overrides belong in /homeassistant/.codex/config.toml for trusted projects.",
         "",
     ]

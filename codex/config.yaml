@@ -1,6 +1,6 @@
 name: Codex
-description: OpenAI Codex in Home Assistant with a persistent terminal and optional Home Assistant MCP access
-version: "0.2.8"
+description: OpenAI Codex App for Home Assistant with terminal access, model controls, and optional Home Assistant MCP integration
+version: "0.2.9"
 slug: codex
 url: https://github.com/kecksdigital/codex-hass
 arch:
@@ -30,9 +30,11 @@ options:
   terminal_font_size: 14
   terminal_theme: dark
   working_directory: /homeassistant
-  session_persistence: true
+  session_persistence: false
   default_model: "gpt-5.4"
   codex_permissions: workspace
+  auto_update_codex: false
+  codex_update_timeout: 300
 schema:
   enable_mcp: bool
   terminal_font_size: int(10,24)
@@ -41,5 +43,7 @@ schema:
   session_persistence: bool
   default_model: str?
   codex_permissions: list(workspace|full_access)
+  auto_update_codex: bool
+  codex_update_timeout: int(30,300)
 environment:
   TERM: xterm-256color

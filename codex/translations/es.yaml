@@ -25,11 +25,12 @@ configuration:
     description: >-
       Habilita persistencia de sesión vía tmux. Cuando está habilitado, tu
       sesión del terminal sobrevive a actualizaciones del navegador y desconexiones.
-      Recomendado para tareas de larga duración.
+      Déjalo deshabilitado para el primer inicio de sesión y habilítalo para
+      trabajos de larga duración.
   default_model:
     name: Modelo Predeterminado
     description: >-
-      Modelo persistente de inicio para Codex. El add-on inicia con gpt-5.4,
+      Modelo persistente de inicio para Codex. La App inicia con gpt-5.4,
       y los usuarios todavía pueden cambiar el modelo durante la sesión con
       /model.
   codex_permissions:
@@ -38,6 +39,17 @@ configuration:
       Perfil de sandbox local predeterminado para Codex. Workspace permite
       trabajo normal en el proyecto de Home Assistant. Full access usa
       sandbox danger-full-access y elimina restricciones locales de sandbox.
+  auto_update_codex:
+    name: Actualizar Codex CLI automáticamente
+    description: >-
+      Busca la versión más reciente de Codex CLI al iniciar con una instalación
+      npm limitada por tiempo. Deshabilitado por defecto para mantener un inicio
+      predecible.
+  codex_update_timeout:
+    name: Tiempo máximo de actualización
+    description: >-
+      Segundos máximos para esperar la actualización opcional de Codex CLI al
+      iniciar. Solo aplica cuando la actualización automática está habilitada.
 
 network:
   7681/tcp: Terminal Web (ttyd)

@@ -1,40 +1,64 @@
-# Kecks Digital Home Assistant Add-ons
+# Codex App for Home Assistant
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Home Assistant add-ons for AI-assisted configuration work, browser automation, and utility services.
+Run OpenAI Codex from the Home Assistant sidebar.
 
-The main add-on in this repository is `Codex`, which runs OpenAI Codex inside the Home Assistant sidebar with a persistent terminal and optional Home Assistant MCP access.
-`Auto-Monocle` and `Playwright Browser` are separate optional add-ons. Codex does not depend on them.
+This repository publishes one Home Assistant App: `Codex`. It gives you a browser terminal inside Home Assistant, starts in your Home Assistant configuration directory, and can optionally connect Codex to Home Assistant through MCP.
 
-## Add-ons
-
-| Add-on | Description |
-|--------|-------------|
-| [Codex](codex/) | OpenAI Codex in the Home Assistant sidebar with a persistent terminal and optional Home Assistant MCP access |
-| [Auto-Monocle](auto-monocle/) | Auto-discover HA cameras and expose to Alexa via Monocle Gateway |
-| [Playwright Browser](playwright-browser/) | Headless Chromium with CDP endpoint for browser automation |
-
-## Install This Repository
+## Install
 
 [![Add Repository](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fkecksdigital%2Fcodex-hass)
 
-Or manually: **Settings** → **Add-ons** → **Add-on Store** → **⋮** → **Repositories** → Add `https://github.com/kecksdigital/codex-hass`
+Manual install:
 
-## Getting Started With Codex
+1. Open **Settings** -> **Add-ons** -> **Add-on Store** in Home Assistant.
+2. Open **Repositories** from the three-dot menu.
+3. Add `https://github.com/kecksdigital/codex-hass`.
+4. Install **Codex**.
+5. Start the App and open it from the sidebar.
 
-1. Add this repository to Home Assistant.
-2. Install the `Codex` add-on.
-3. Set the add-on options you want, especially `default_model`, `codex_permissions`, `enable_mcp`, and `session_persistence`.
-4. Start the add-on and open the sidebar panel.
-5. Complete the Codex sign-in flow when the terminal opens Codex.
+## What You Get
 
-The Codex add-on starts in `/homeassistant`, uses `gpt-5.4` as its starter model, mounts the standard Home Assistant folders, stores persistent Codex state under `/data/codex-home/`, and can expose a `homeassistant` MCP server when enabled. Set `codex_permissions` to `full_access` when you want Codex to use `sandbox_mode = "danger-full-access"` inside the add-on container.
+- OpenAI Codex CLI running in Home Assistant.
+- A web terminal served through Home Assistant ingress.
+- Direct access to `/homeassistant`, `/share`, and `/media`.
+- Read-only access to `/ssl` and `/backup`.
+- Optional Home Assistant MCP integration for entity lookup and service calls.
+- Persistent Codex auth and settings under `/data/codex-home`.
+- Home Assistant options for model default, sandbox access, MCP, terminal theme, and session persistence.
+
+## Authentication
+
+Codex authentication happens inside the terminal. Home Assistant does not store your OpenAI API key, ChatGPT session, or Codex access token in App options.
+
+On first launch, Codex prompts you to sign in. The Codex CLI supports ChatGPT sign-in for subscription access and API-key sign-in for usage-based access. On headless or remote systems, use the Codex device-code login option if the normal browser callback flow cannot complete.
+
+## Defaults
+
+- Model: `gpt-5.4`
+- Access: `workspace`
+- Session persistence: off for a cleaner first sign-in
+- MCP: on
+- Auto-update Codex CLI: off
+
+Use `full_access` only when you want Codex to run with broad local access inside the App container.
+
+## Documentation
+
+Read the full usage guide in [codex/README.md](codex/README.md).
+
+Useful upstream docs:
+
+- [Codex CLI](https://developers.openai.com/codex/cli)
+- [Codex authentication](https://developers.openai.com/codex/auth)
+- [Codex configuration](https://developers.openai.com/codex/config-basic)
+- [Codex configuration reference](https://developers.openai.com/codex/config-reference)
 
 ## Support
 
-- [Codex add-on guide](codex/README.md)
 - [Issues](https://github.com/kecksdigital/codex-hass/issues)
+- [Home Assistant Community](https://community.home-assistant.io/)
 
 ## License
 
