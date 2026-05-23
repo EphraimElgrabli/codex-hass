@@ -126,7 +126,9 @@ logger:
 **Key insight:** `_LOGGER.debug()` calls are invisible unless the logger level is set to debug. Use `_LOGGER.info()` or `_LOGGER.warning()` for logs that should always appear.
 EOF
 
-validate_home="$(mktemp -d /tmp/codex-validate.XXXXXX)"
+validate_home="$CODEX_MANAGED_ROOT/validate-home"
+rm -rf "$validate_home"
+mkdir -p "$validate_home"
 trap 'rm -rf "$validate_home"' EXIT
 /usr/local/bin/codex-merge-config "${validate_home}/config.toml" "$default_model" "$enable_mcp"
 if [[ "$enable_mcp" == "true" ]]; then

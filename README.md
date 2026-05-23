@@ -5,13 +5,13 @@
 Home Assistant add-ons for AI-assisted configuration work, browser automation, and utility services.
 
 The main add-on in this repository is `Codex`, which runs OpenAI Codex inside the Home Assistant sidebar with per-user shells, persistent sessions, and optional Home Assistant MCP access.
+`Auto-Monocle` and `Playwright Browser` are separate optional add-ons. Codex does not depend on them.
 
 ## Add-ons
 
 | Add-on | Description |
 |--------|-------------|
 | [Codex](codex/) | OpenAI Codex in the Home Assistant sidebar with per-user shells, persistent sessions, and optional Home Assistant MCP access |
-| [Claude Code](claudecode/) | Claude Code in the Home Assistant sidebar for automation and debugging workflows |
 | [Auto-Monocle](auto-monocle/) | Auto-discover HA cameras and expose to Alexa via Monocle Gateway |
 | [Playwright Browser](playwright-browser/) | Headless Chromium with CDP endpoint for browser automation |
 

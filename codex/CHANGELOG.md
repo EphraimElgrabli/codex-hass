@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] - 2026-05-24
+
+### Fixed
+- Allowed AppArmor execution of `/usr/sbin/nginx` so the hardened ingress proxy can start correctly
+- Moved Codex startup validation out of `/tmp` to avoid Codex helper-binary warnings during MCP config checks
+
 ## [0.2.1] - 2026-05-24
 
 ### Changed
