@@ -93,8 +93,8 @@ session_env=(
 if [[ "$session_persist" == "true" ]]; then
   exec su-exec "$session_uid:$session_gid" env "${session_env[@]}" \
     tmux -L "codex-${safe_user}" new-session -A -s codex -c "$work_dir" \
-    "exec bash --rcfile /etc/codex.bashrc -i"
+    "exec /usr/local/bin/codex-shell"
 fi
 
 exec su-exec "$session_uid:$session_gid" env "${session_env[@]}" \
-  bash --rcfile /etc/codex.bashrc -i
+  /usr/local/bin/codex-shell

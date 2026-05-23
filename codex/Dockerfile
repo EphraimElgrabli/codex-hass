@@ -26,7 +26,6 @@ RUN apk add --no-cache \
     jq \
     nano \
     ncurses \
-    nginx \
     nodejs \
     npm \
     openssh-client \
@@ -75,6 +74,7 @@ RUN chmod +x \
     /usr/local/bin/hass-mcp-wrapper \
     /usr/local/bin/hass-mcp-root-helper \
     /usr/local/bin/codex-merge-config \
+    /usr/local/bin/codex-shell \
     /usr/local/bin/codex-session \
     /usr/local/bin/codex-start \
     && chmod 440 /etc/sudoers.d/codex-hass-mcp
@@ -105,7 +105,7 @@ ENV PATH="/root/.local/bin:${PATH}"
 WORKDIR /homeassistant
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -sf http://localhost:7681/healthz || exit 1
+    CMD curl -sf http://localhost:7681/ >/dev/null || exit 1
 
 ENTRYPOINT []
 CMD ["/usr/local/bin/codex-start"]

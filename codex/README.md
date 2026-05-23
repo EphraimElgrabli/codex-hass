@@ -1,22 +1,21 @@
 # Codex Home Assistant Add-on
 
-Run [OpenAI Codex](https://developers.openai.com/codex/cli) directly inside the Home Assistant sidebar. This add-on gives each Home Assistant user a separate Codex runtime, persistent Codex state, access to the Home Assistant configuration folder, and optional Home Assistant MCP integration through `hass-mcp`.
+Run [OpenAI Codex](https://developers.openai.com/codex/cli) directly inside the Home Assistant sidebar. This add-on gives Home Assistant a persistent Codex terminal, access to the Home Assistant configuration folder, and optional Home Assistant MCP integration through `hass-mcp`.
 
 ## What This Add-on Does
 
-The add-on starts a browser-based terminal in Home Assistant and launches a per-user shell behind it. From that shell you can run `codex`, inspect your configuration, edit YAML, review logs, and work against your Home Assistant project without leaving the Home Assistant UI.
+The add-on starts a browser-based terminal in Home Assistant and launches a persistent shell behind it. From that shell you can run `codex`, inspect your configuration, edit YAML, review logs, and work against your Home Assistant project without leaving the Home Assistant UI.
 
 When MCP is enabled, the add-on also registers a `homeassistant` MCP server for Codex. That lets Codex inspect entity state, call services, and reason about your installation with direct Home Assistant context.
 
 ## How It Works
 
 1. Home Assistant opens the add-on through ingress.
-2. nginx accepts only Home Assistant ingress traffic and proxies it to `ttyd`.
-3. The runtime maps the authenticated Home Assistant user to a dedicated Unix account.
-4. The shell starts in the configured working directory, usually `/homeassistant`.
-5. Each Home Assistant user gets a separate Codex home under `/data/codex-home/users/<ha-user-id>/.codex`.
-6. If session persistence is enabled, the runtime reconnects that user to their own tmux session instead of a shared shell.
-7. If MCP is enabled, Codex receives a managed `homeassistant` server entry that launches `hass-mcp` through a privileged helper rather than exposing the Supervisor token in the interactive shell.
+2. `ttyd` serves the Home Assistant ingress terminal on port `7681`.
+3. The shell starts in the configured working directory, usually `/homeassistant`.
+4. Codex state is stored under `/data/codex-home/users/anonymous/.codex` in the current direct-ttyd ingress mode.
+5. If session persistence is enabled, the runtime reconnects to the existing tmux session.
+6. If MCP is enabled, Codex receives a managed `homeassistant` server entry that launches `hass-mcp` through a privileged helper rather than exposing the Supervisor token in the interactive shell.
 
 ## Requirements
 
@@ -34,13 +33,8 @@ When MCP is enabled, the add-on also registers a `homeassistant` MCP server for 
 ## First Run
 
 1. Open the add-on from the Home Assistant sidebar.
-2. Run:
-
-```bash
-codex
-```
-
-3. Complete the Codex sign-in flow in the terminal.
+2. Codex starts automatically in the terminal.
+3. Complete the Codex sign-in flow if this is the first launch.
 4. Trust `/homeassistant` inside Codex if you want project-level `.codex/config.toml` settings in that directory to load.
 5. Start working from `/homeassistant`.
 
@@ -60,7 +54,7 @@ Useful commands:
 
 | Command | Purpose |
 |---------|---------|
-| `codex` | Start Codex |
+| `codex` | Reopen Codex after exiting to the shell |
 | `ha-config` | Jump to `/homeassistant` |
 | `ha-logs` | Print `home-assistant.log` if it exists |
 
@@ -80,7 +74,7 @@ The add-on lets you choose a default model without locking the session to that m
 | `terminal_font_size` | Terminal font size in the sidebar UI | `14` |
 | `terminal_theme` | Sidebar terminal color theme | `dark` |
 | `working_directory` | Initial directory for the shell | `/homeassistant` |
-| `session_persistence` | Reattach each Home Assistant user to their own tmux session | `true` |
+| `session_persistence` | Reattach to the existing tmux session | `true` |
 | `default_model` | Optional persistent startup model for Codex | blank |
 
 ## Files, Persistence, and Overrides
@@ -90,7 +84,7 @@ The add-on lets you choose a default model without locking the session to that m
 | `/homeassistant` | Your Home Assistant configuration directory |
 | `/homeassistant/.codex/config.toml` | Optional project-level Codex overrides |
 | `/homeassistant/AGENTS.md` | Optional project-level Codex instructions |
-| `/data/codex-home/users/<ha-user-id>/.codex` | Per-user persistent Codex home |
+| `/data/codex-home/users/anonymous/.codex` | Persistent Codex home used by the direct-ttyd ingress mode |
 | `/data/codex-home/legacy-global-home` | Backup of older shared Codex state |
 | `/share` | Shared Home Assistant folder |
 | `/media` | Media folder |
@@ -108,7 +102,7 @@ When `enable_mcp` is on, the add-on writes a managed `homeassistant` MCP server 
 When `session_persistence` is enabled:
 
 - Your browser can disconnect and reconnect without losing the session
-- Each Home Assistant user reconnects to their own tmux session
+- The terminal reconnects to the existing tmux session
 - Long-running Codex tasks can keep running in the background
 
 Useful tmux keys:
@@ -125,7 +119,7 @@ To copy text while tmux is active, hold `Ctrl+Shift` while selecting text in the
 
 ### Codex will not start
 
-1. Run `codex` manually from the terminal.
+1. Exit to the shell if needed, then run `codex` manually from the terminal.
 2. Follow the sign-in or API key prompts shown by the CLI.
 3. Check the add-on logs for startup errors.
 

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.6] - 2026-05-24
+
+### Fixed
+- Restored direct ttyd ingress serving on port 7681 so the WebSocket console works behind Home Assistant ingress
+- Removed the nginx proxy and ttyd auth-header mode that caused `/ws` 502 responses and ttyd restart prompts
+- Updated the healthcheck to probe ttyd directly after removing nginx from the runtime path
+- Updated documentation to describe the current shared direct-ttyd ingress identity accurately
+
+### Changed
+- Start Codex automatically when the Web UI opens so unauthenticated users are taken directly into the Codex sign-in flow
+- Retry Codex by default when startup exits before completion, with an explicit diagnostic shell escape
+
 ## [0.2.5] - 2026-05-24
 
 ### Fixed

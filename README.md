@@ -4,14 +4,14 @@
 
 Home Assistant add-ons for AI-assisted configuration work, browser automation, and utility services.
 
-The main add-on in this repository is `Codex`, which runs OpenAI Codex inside the Home Assistant sidebar with per-user shells, persistent sessions, and optional Home Assistant MCP access.
+The main add-on in this repository is `Codex`, which runs OpenAI Codex inside the Home Assistant sidebar with a persistent terminal and optional Home Assistant MCP access.
 `Auto-Monocle` and `Playwright Browser` are separate optional add-ons. Codex does not depend on them.
 
 ## Add-ons
 
 | Add-on | Description |
 |--------|-------------|
-| [Codex](codex/) | OpenAI Codex in the Home Assistant sidebar with per-user shells, persistent sessions, and optional Home Assistant MCP access |
+| [Codex](codex/) | OpenAI Codex in the Home Assistant sidebar with a persistent terminal and optional Home Assistant MCP access |
 | [Auto-Monocle](auto-monocle/) | Auto-discover HA cameras and expose to Alexa via Monocle Gateway |
 | [Playwright Browser](playwright-browser/) | Headless Chromium with CDP endpoint for browser automation |
 
@@ -27,9 +27,9 @@ Or manually: **Settings** → **Add-ons** → **Add-on Store** → **⋮** → *
 2. Install the `Codex` add-on.
 3. Set the add-on options you want, especially `default_model`, `enable_mcp`, and `session_persistence`.
 4. Start the add-on and open the sidebar panel.
-5. Run `codex` in the terminal and complete the Codex sign-in flow.
+5. Complete the Codex sign-in flow when the terminal opens Codex.
 
-The Codex add-on starts in `/homeassistant`, mounts the standard Home Assistant folders, stores each user's Codex home separately under `/data/codex-home/users/`, and can expose a `homeassistant` MCP server when enabled.
+The Codex add-on starts in `/homeassistant`, mounts the standard Home Assistant folders, stores persistent Codex state under `/data/codex-home/`, and can expose a `homeassistant` MCP server when enabled.
 
 ## Support
 
