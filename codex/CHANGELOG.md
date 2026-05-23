@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.5] - 2026-05-24
+
+### Fixed
+- Fixed the per-user tmux launcher so ttyd opens an interactive shell instead of falling back to its restart prompt
+- Added visible session startup errors in the browser terminal when the shell wrapper fails before bash starts
+
 ## [0.2.4] - 2026-05-24
 
 ### Changed

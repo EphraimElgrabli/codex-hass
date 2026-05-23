@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+on_error() {
+  local status=$?
+  echo "[ERROR] Codex session startup failed with exit code ${status}." >&2
+  echo "[ERROR] Check the add-on logs for details, then press Enter to retry." >&2
+  exit "$status"
+}
+
+trap on_error ERR
+
 raw_user="${TTYD_USER:-anonymous}"
 safe_user="$(printf '%s' "$raw_user" | tr -cs 'A-Za-z0-9._-' '_' | sed 's/^_*$//')"
 if [[ -z "$safe_user" ]]; then
@@ -74,11 +83,18 @@ export TERM="${TERM:-xterm-256color}"
 
 cd "$work_dir"
 
+session_env=(
+  "HOME=$user_root"
+  "CODEX_HOME=$user_codex_home"
+  "CODEX_USER_ID=$safe_user"
+  "TERM=$TERM"
+)
+
 if [[ "$session_persist" == "true" ]]; then
-  exec su-exec "$session_uid:$session_gid" tmux -L "codex-${safe_user}" new-session -A -s codex -c "$work_dir" \
-    env HOME="$user_root" CODEX_HOME="$user_codex_home" CODEX_USER_ID="$safe_user" \
-    bash --rcfile /etc/codex.bashrc -i
+  exec su-exec "$session_uid:$session_gid" env "${session_env[@]}" \
+    tmux -L "codex-${safe_user}" new-session -A -s codex -c "$work_dir" \
+    "exec bash --rcfile /etc/codex.bashrc -i"
 fi
 
-exec su-exec "$session_uid:$session_gid" env HOME="$user_root" CODEX_HOME="$user_codex_home" CODEX_USER_ID="$safe_user" \
+exec su-exec "$session_uid:$session_gid" env "${session_env[@]}" \
   bash --rcfile /etc/codex.bashrc -i
