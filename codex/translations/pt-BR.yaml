@@ -29,9 +29,14 @@ configuration:
   default_model:
     name: Modelo Padrão
     description: >-
-      Modelo persistente opcional para o Codex. Deixe vazio para usar o
-      modelo padrão do Codex. Os usuários ainda podem trocar o modelo durante
-      a sessão com /model.
+      Modelo persistente inicial para o Codex. O add-on inicia com gpt-5.4,
+      e os usuários ainda podem trocar o modelo durante a sessão com /model.
+  codex_permissions:
+    name: Nível de Acesso do Codex
+    description: >-
+      Perfil de sandbox local padrão para o Codex. Workspace permite o
+      trabalho normal no projeto do Home Assistant. Full access usa
+      sandbox danger-full-access e remove restrições locais de sandbox.
 
 network:
   7681/tcp: Terminal Web (ttyd)

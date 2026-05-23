@@ -47,6 +47,7 @@ work_dir="${CODEX_WORK_DIR:-/homeassistant}"
 session_persist="${CODEX_SESSION_PERSIST:-true}"
 default_model="${CODEX_DEFAULT_MODEL:-}"
 enable_mcp="${CODEX_ENABLE_MCP:-true}"
+codex_permissions="${CODEX_PERMISSIONS:-workspace}"
 session_uid=22000
 system_user="codex"
 session_gid=0
@@ -76,7 +77,7 @@ cleanup_config_lock() {
 
 trap cleanup_config_lock EXIT
 
-/usr/local/bin/codex-merge-config "${user_codex_home}/config.toml" "$default_model" "$enable_mcp"
+/usr/local/bin/codex-merge-config "${user_codex_home}/config.toml" "$default_model" "$enable_mcp" "$codex_permissions"
 merge_status=$?
 if [[ "$merge_status" -ne 0 ]]; then
   cleanup_config_lock

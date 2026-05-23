@@ -76,13 +76,17 @@ def load_existing_config(path):
 
 
 def main():
-    if len(sys.argv) != 4:
-        print("usage: codex-merge-config <config_path> <default_model> <enable_mcp>", file=sys.stderr)
+    if len(sys.argv) not in (4, 5):
+        print(
+            "usage: codex-merge-config <config_path> <default_model> <enable_mcp> [codex_permissions]",
+            file=sys.stderr,
+        )
         return 1
 
     config_path = Path(sys.argv[1])
     default_model = sys.argv[2]
     enable_mcp = sys.argv[3].lower() == "true"
+    codex_permissions = sys.argv[4] if len(sys.argv) == 5 else "workspace"
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config = load_existing_config(config_path)
@@ -94,13 +98,40 @@ def main():
 
     previous_managed_model = metadata.get("managed_model")
     if default_model:
-        config["model"] = default_model
-        metadata["managed_model"] = default_model
+        if "model" not in config or previous_managed_model is not None or config.get("model") == previous_managed_model:
+            config["model"] = default_model
+            metadata["managed_model"] = default_model
+        else:
+            metadata.pop("managed_model", None)
     elif config.get("model") == previous_managed_model:
         config.pop("model", None)
         metadata.pop("managed_model", None)
     else:
         metadata.pop("managed_model", None)
+
+    permission_profiles = {
+        "workspace": "workspace-write",
+        "full_access": "danger-full-access",
+    }
+    managed_sandbox_mode = permission_profiles.get(codex_permissions)
+    previous_managed_sandbox_mode = metadata.get("managed_sandbox_mode")
+    if managed_sandbox_mode:
+        should_manage_sandbox = (
+            "sandbox_mode" not in config
+            or previous_managed_sandbox_mode is not None
+            or codex_permissions == "full_access"
+            or config.get("sandbox_mode") == previous_managed_sandbox_mode
+        )
+        if should_manage_sandbox:
+            config["sandbox_mode"] = managed_sandbox_mode
+            metadata["managed_sandbox_mode"] = managed_sandbox_mode
+        else:
+            metadata.pop("managed_sandbox_mode", None)
+    elif config.get("sandbox_mode") == previous_managed_sandbox_mode:
+        config.pop("sandbox_mode", None)
+        metadata.pop("managed_sandbox_mode", None)
+    else:
+        metadata.pop("managed_sandbox_mode", None)
 
     mcp_servers = config.setdefault("mcp_servers", {})
     if not isinstance(mcp_servers, dict):

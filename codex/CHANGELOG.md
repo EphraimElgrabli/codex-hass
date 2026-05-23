@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.8] - 2026-05-24
+
+### Changed
+- Set the starter `default_model` add-on option to `gpt-5.4` instead of leaving Codex to choose its current default
+- Added a `codex_permissions` add-on option with `workspace` and `full_access` choices
+- Generate Codex `sandbox_mode` from the add-on option, mapping `full_access` to `danger-full-access`
+- Documented how to change the model and access level from Home Assistant options
+
 ## [0.2.7] - 2026-05-24
 
 ### Fixed

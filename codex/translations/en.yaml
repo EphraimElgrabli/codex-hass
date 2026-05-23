@@ -28,9 +28,14 @@ configuration:
   default_model:
     name: Default Model
     description: >-
-      Optional persistent default model for Codex. Leave blank to use the
-      built-in Codex default. Users can still switch models during a session
-      with /model.
+      Persistent startup model for Codex. The add-on starts with gpt-5.4,
+      and users can still switch models during a session with /model.
+  codex_permissions:
+    name: Codex Access Level
+    description: >-
+      Default local sandbox profile for Codex. Workspace allows normal
+      Home Assistant project work. Full access maps to sandbox danger-full-access
+      and removes local sandbox restrictions.
 
 network:
   7681/tcp: Web Terminal (ttyd)

@@ -25,11 +25,11 @@ Or manually: **Settings** → **Add-ons** → **Add-on Store** → **⋮** → *
 
 1. Add this repository to Home Assistant.
 2. Install the `Codex` add-on.
-3. Set the add-on options you want, especially `default_model`, `enable_mcp`, and `session_persistence`.
+3. Set the add-on options you want, especially `default_model`, `codex_permissions`, `enable_mcp`, and `session_persistence`.
 4. Start the add-on and open the sidebar panel.
 5. Complete the Codex sign-in flow when the terminal opens Codex.
 
-The Codex add-on starts in `/homeassistant`, mounts the standard Home Assistant folders, stores persistent Codex state under `/data/codex-home/`, and can expose a `homeassistant` MCP server when enabled.
+The Codex add-on starts in `/homeassistant`, uses `gpt-5.4` as its starter model, mounts the standard Home Assistant folders, stores persistent Codex state under `/data/codex-home/`, and can expose a `homeassistant` MCP server when enabled. Set `codex_permissions` to `full_access` when you want Codex to use `sandbox_mode = "danger-full-access"` inside the add-on container.
 
 ## Support
 

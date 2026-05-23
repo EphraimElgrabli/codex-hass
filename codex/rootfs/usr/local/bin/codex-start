@@ -7,6 +7,7 @@ session_persist="$(jq -r '.session_persistence // true' /data/options.json)"
 work_dir="$(jq -r '.working_directory // "/homeassistant"' /data/options.json)"
 enable_mcp="$(jq -r '.enable_mcp // true' /data/options.json)"
 default_model="$(jq -r '.default_model // ""' /data/options.json)"
+codex_permissions="$(jq -r '.codex_permissions // "workspace"' /data/options.json)"
 
 export CODEX_STATE_ROOT="/data/codex-home"
 export CODEX_MANAGED_ROOT="/data/codex-managed"
@@ -14,6 +15,7 @@ export CODEX_WORK_DIR="$work_dir"
 export CODEX_SESSION_PERSIST="$session_persist"
 export CODEX_ENABLE_MCP="$enable_mcp"
 export CODEX_DEFAULT_MODEL="$default_model"
+export CODEX_PERMISSIONS="$codex_permissions"
 export CODEX_HA_URL="http://supervisor/core"
 export CODEX_SUPERVISOR_TOKEN_FILE="/tmp/codex/ha-token"
 
@@ -125,7 +127,7 @@ validate_home="$CODEX_MANAGED_ROOT/validate-home"
 rm -rf "$validate_home"
 mkdir -p "$validate_home"
 trap 'rm -rf "$validate_home"' EXIT
-/usr/local/bin/codex-merge-config "${validate_home}/config.toml" "$default_model" "$enable_mcp"
+/usr/local/bin/codex-merge-config "${validate_home}/config.toml" "$default_model" "$enable_mcp" "$codex_permissions"
 if [[ "$enable_mcp" == "true" ]]; then
   CODEX_HOME="$validate_home" codex mcp get homeassistant >/dev/null
   echo "[INFO] Home Assistant MCP configured for Codex home"

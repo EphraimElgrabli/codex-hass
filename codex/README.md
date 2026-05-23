@@ -60,11 +60,21 @@ Useful commands:
 
 ## Model Selection
 
-The add-on lets you choose a default model without locking the session to that model:
+The add-on starts with `gpt-5.4` as the managed default model without locking the session to that model:
 
 - Set `default_model` in the add-on config to write a persistent default into the managed Codex config.
-- Leave `default_model` blank to use Codex defaults.
+- The default add-on value is `gpt-5.4`, because it is a better starting point than whatever the Codex CLI currently treats as its own default.
+- Leave `default_model` blank if you want to preserve an existing manually managed Codex model setting.
 - Use `/model` inside Codex any time you want to switch models for the current session.
+
+## Access Level
+
+The `codex_permissions` option controls the default local sandbox profile written into Codex config:
+
+- `workspace` writes `sandbox_mode = "workspace-write"` and is the safer default for normal Home Assistant work.
+- `full_access` writes `sandbox_mode = "danger-full-access"` for broad local access inside the add-on container.
+
+Full access removes Codex's local sandbox restrictions. Only enable it when you want Codex to operate with the add-on's available filesystem and network permissions without workspace sandbox limits.
 
 ## Add-on Options
 
@@ -75,7 +85,8 @@ The add-on lets you choose a default model without locking the session to that m
 | `terminal_theme` | Sidebar terminal color theme | `dark` |
 | `working_directory` | Initial directory for the shell | `/homeassistant` |
 | `session_persistence` | Reattach to the existing tmux session | `true` |
-| `default_model` | Optional persistent startup model for Codex | blank |
+| `default_model` | Persistent startup model for Codex | `gpt-5.4` |
+| `codex_permissions` | Codex local permission profile: `workspace` or `full_access` | `workspace` |
 
 ## Files, Persistence, and Overrides
 
