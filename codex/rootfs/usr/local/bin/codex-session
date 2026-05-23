@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+raw_user="${TTYD_USER:-anonymous}"
+safe_user="$(printf '%s' "$raw_user" | tr -cs 'A-Za-z0-9._-' '_' | sed 's/^_*$//')"
+if [[ -z "$safe_user" ]]; then
+  safe_user="anonymous"
+fi
+
+state_root="${CODEX_STATE_ROOT:-/data/codex-home}"
+managed_root="${CODEX_MANAGED_ROOT:-/data/codex-managed}"
+user_root="${state_root}/users/${safe_user}"
+user_codex_home="${user_root}/.codex"
+work_dir="${CODEX_WORK_DIR:-/homeassistant}"
+session_persist="${CODEX_SESSION_PERSIST:-true}"
+default_model="${CODEX_DEFAULT_MODEL:-}"
+enable_mcp="${CODEX_ENABLE_MCP:-true}"
+user_map_file="${state_root}/user-map.tsv"
+user_map_lock="${state_root}/.user-map.lock"
+session_gid=0
+
+mkdir -p "$user_codex_home" "$user_root"
+
+while ! mkdir "$user_map_lock" 2>/dev/null; do
+  sleep 0.1
+done
+
+cleanup_lock() {
+  rmdir "$user_map_lock" 2>/dev/null || true
+}
+
+trap cleanup_lock EXIT
+
+user_mapping=""
+if [[ -f "$user_map_file" ]]; then
+  user_mapping="$(awk -F: -v user="$safe_user" '$1 == user { print $0; exit }' "$user_map_file")"
+fi
+
+if [[ -z "$user_mapping" ]]; then
+  last_uid="$(awk -F: 'BEGIN { max = 21999 } NF >= 2 && $2 > max { max = $2 } END { print max }' "$user_map_file" 2>/dev/null || echo 21999)"
+  session_uid=$((last_uid + 1))
+  system_user="codexu${session_uid}"
+  printf '%s:%s:%s\n' "$safe_user" "$session_uid" "$system_user" >> "$user_map_file"
+else
+  IFS=: read -r _ session_uid system_user <<< "$user_mapping"
+fi
+
+cleanup_lock
+trap - EXIT
+
+if ! id -u "$system_user" >/dev/null 2>&1; then
+  adduser -D -H -u "$session_uid" -G root "$system_user" >/dev/null
+fi
+
+rm -f "${user_codex_home}/AGENTS.md"
+chown -R "$session_uid:$session_gid" "$user_root"
+chmod 700 "$user_root" "$user_codex_home"
+
+if [[ -f "${managed_root}/AGENTS.md" ]]; then
+  ln -sfn "${managed_root}/AGENTS.md" "${user_codex_home}/AGENTS.md"
+fi
+
+/usr/local/bin/codex-merge-config "${user_codex_home}/config.toml" "$default_model" "$enable_mcp"
+
+if [[ ! -d "$work_dir" ]]; then
+  echo "[WARN] Working directory not found: $work_dir. Falling back to /homeassistant" >&2
+  work_dir="/homeassistant"
+fi
+
+export HOME="$user_root"
+export CODEX_HOME="$user_codex_home"
+export CODEX_USER_ID="$safe_user"
+export TERM="${TERM:-xterm-256color}"
+
+cd "$work_dir"
+
+if [[ "$session_persist" == "true" ]]; then
+  exec su-exec "$session_uid:$session_gid" tmux -L "codex-${safe_user}" new-session -A -s codex -c "$work_dir" \
+    env HOME="$user_root" CODEX_HOME="$user_codex_home" CODEX_USER_ID="$safe_user" \
+    bash --rcfile /etc/codex.bashrc -i
+fi
+
+exec su-exec "$session_uid:$session_gid" env HOME="$user_root" CODEX_HOME="$user_codex_home" CODEX_USER_ID="$safe_user" \
+  bash --rcfile /etc/codex.bashrc -i

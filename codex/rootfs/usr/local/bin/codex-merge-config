@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+import json
+import shutil
+import sys
+from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    print("tomllib is required", file=sys.stderr)
+    sys.exit(1)
+
+
+def format_scalar(value):
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return repr(value)
+    if isinstance(value, str):
+        return json.dumps(value)
+    if isinstance(value, list):
+        return "[" + ", ".join(format_inline(item) for item in value) + "]"
+    if isinstance(value, dict):
+        items = ", ".join(f"{key} = {format_inline(val)}" for key, val in value.items())
+        return "{ " + items + " }"
+    raise TypeError(f"Unsupported TOML value type: {type(value)!r}")
+
+
+def format_inline(value):
+    if isinstance(value, dict):
+        items = ", ".join(f"{key} = {format_inline(val)}" for key, val in value.items())
+        return "{ " + items + " }"
+    return format_scalar(value)
+
+
+def emit_table(lines, table_name, mapping):
+    scalar_items = []
+    child_tables = []
+    for key, value in mapping.items():
+        if isinstance(value, dict):
+            child_tables.append((key, value))
+        else:
+            scalar_items.append((key, value))
+
+    if table_name:
+        lines.append(f"[{table_name}]")
+    for key, value in scalar_items:
+        lines.append(f"{key} = {format_scalar(value)}")
+    if table_name and child_tables:
+        lines.append("")
+
+    for index, (key, value) in enumerate(child_tables):
+        child_name = f"{table_name}.{key}" if table_name else key
+        emit_table(lines, child_name, value)
+        if index != len(child_tables) - 1:
+            lines.append("")
+
+
+def load_existing_config(path):
+    if not path.exists():
+        return {}
+
+    try:
+        with path.open("rb") as handle:
+            loaded = tomllib.load(handle)
+    except tomllib.TOMLDecodeError:
+        backup_path = path.with_suffix(path.suffix + ".invalid.bak")
+        shutil.copy2(path, backup_path)
+        return {}
+
+    if not isinstance(loaded, dict):
+        return {}
+    return loaded
+
+
+def main():
+    if len(sys.argv) != 4:
+        print("usage: codex-merge-config <config_path> <default_model> <enable_mcp>", file=sys.stderr)
+        return 1
+
+    config_path = Path(sys.argv[1])
+    default_model = sys.argv[2]
+    enable_mcp = sys.argv[3].lower() == "true"
+
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config = load_existing_config(config_path)
+
+    metadata = config.setdefault("__homeassistant_addon", {})
+    if not isinstance(metadata, dict):
+        metadata = {}
+        config["__homeassistant_addon"] = metadata
+
+    previous_managed_model = metadata.get("managed_model")
+    if default_model:
+        config["model"] = default_model
+        metadata["managed_model"] = default_model
+    elif config.get("model") == previous_managed_model:
+        config.pop("model", None)
+        metadata.pop("managed_model", None)
+    else:
+        metadata.pop("managed_model", None)
+
+    mcp_servers = config.setdefault("mcp_servers", {})
+    if not isinstance(mcp_servers, dict):
+        mcp_servers = {}
+        config["mcp_servers"] = mcp_servers
+
+    existing_homeassistant = mcp_servers.get("homeassistant", {})
+    if not isinstance(existing_homeassistant, dict):
+        existing_homeassistant = {}
+
+    if enable_mcp:
+        preserved_homeassistant = metadata.pop("managed_homeassistant_mcp_backup", {})
+        if not isinstance(preserved_homeassistant, dict):
+            preserved_homeassistant = {}
+        merged_homeassistant = dict(preserved_homeassistant)
+        merged_homeassistant.update(existing_homeassistant)
+        merged_homeassistant["command"] = "/usr/local/bin/hass-mcp-wrapper"
+        mcp_servers["homeassistant"] = merged_homeassistant
+        metadata["managed_homeassistant_mcp"] = True
+    else:
+        if existing_homeassistant:
+            metadata["managed_homeassistant_mcp_backup"] = dict(existing_homeassistant)
+        mcp_servers.pop("homeassistant", None)
+        metadata.pop("managed_homeassistant_mcp", None)
+
+    if not mcp_servers:
+        config.pop("mcp_servers", None)
+    if not metadata:
+        config.pop("__homeassistant_addon", None)
+
+    lines = [
+        "# Codex user configuration",
+        "# Managed Home Assistant defaults are merged into this file by the add-on.",
+        "# Project-specific overrides belong in /homeassistant/.codex/config.toml for trusted projects.",
+        "",
+    ]
+    emit_table(lines, "", config)
+    rendered = "\n".join(line for line in lines if line is not None).rstrip() + "\n"
+    config_path.write_text(rendered, encoding="utf-8")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

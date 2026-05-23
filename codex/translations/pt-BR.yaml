@@ -1,0 +1,37 @@
+configuration:
+  enable_mcp:
+    name: Habilitar MCP do Home Assistant
+    description: >-
+      Habilita o servidor MCP do Home Assistant para interação direta com
+      entidades e serviços pelo Codex. Permite que o Codex consulte estados,
+      chame serviços e interaja com sua casa inteligente.
+  terminal_font_size:
+    name: Tamanho da Fonte do Terminal
+    description: >-
+      Tamanho da fonte do terminal web em pixels (10-24).
+      Ajuste para melhor legibilidade no seu monitor.
+  terminal_theme:
+    name: Tema do Terminal
+    description: >-
+      Tema de cores do terminal web.
+      Escolha 'dark' para fundo escuro ou 'light' para fundo claro.
+  working_directory:
+    name: Diretório de Trabalho
+    description: >-
+      O diretório padrão quando o Codex inicia.
+      Use /homeassistant para acesso direto aos arquivos de configuração do HA.
+  session_persistence:
+    name: Persistência de Sessão
+    description: >-
+      Habilita persistência de sessão via tmux. Quando habilitado, sua sessão
+      do terminal sobrevive a atualizações do navegador e desconexões.
+      Recomendado para tarefas de longa duração.
+  default_model:
+    name: Modelo Padrão
+    description: >-
+      Modelo persistente opcional para o Codex. Deixe vazio para usar o
+      modelo padrão do Codex. Os usuários ainda podem trocar o modelo durante
+      a sessão com /model.
+
+network:
+  7681/tcp: Terminal Web (ttyd)

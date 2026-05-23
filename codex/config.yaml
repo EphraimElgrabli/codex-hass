@@ -1,0 +1,43 @@
+name: Codex
+description: Run OpenAI Codex inside Home Assistant with per-user sessions, Home Assistant MCP, and hardened ingress terminal access
+version: "0.2.0"
+slug: codex
+url: https://github.com/robsonfelix/robsonfelix-hass-addons
+arch:
+  - amd64
+  - aarch64
+startup: application
+boot: auto
+init: true
+ingress: true
+ingress_port: 7681
+ingress_stream: true
+panel_icon: mdi:brain
+panel_title: Codex
+homeassistant_api: true
+auth_api: true
+hassio_api: true
+hassio_role: manager
+map:
+  - homeassistant_config:rw
+  - ssl:ro
+  - share:rw
+  - media:rw
+  - addon_config:rw
+  - backup:ro
+options:
+  enable_mcp: true
+  terminal_font_size: 14
+  terminal_theme: dark
+  working_directory: /homeassistant
+  session_persistence: true
+  default_model: ""
+schema:
+  enable_mcp: bool
+  terminal_font_size: int(10,24)
+  terminal_theme: list(dark|light)
+  working_directory: str
+  session_persistence: bool
+  default_model: str?
+environment:
+  TERM: xterm-256color
