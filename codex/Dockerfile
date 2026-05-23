@@ -3,7 +3,7 @@ FROM ${BUILD_FROM}
 
 LABEL maintainer="Kecks Digital"
 LABEL org.opencontainers.image.title="Codex for Home Assistant"
-LABEL org.opencontainers.image.description="OpenAI Codex for the Home Assistant sidebar with per-user sessions and optional MCP access"
+LABEL org.opencontainers.image.description="OpenAI Codex for the Home Assistant sidebar with persistent terminal sessions and optional MCP access"
 LABEL org.opencontainers.image.source="https://github.com/kecksdigital/codex-hass"
 LABEL org.opencontainers.image.licenses="MIT"
 
@@ -26,6 +26,7 @@ RUN apk add --no-cache \
     jq \
     nano \
     ncurses \
+    ncurses-terminfo-base \
     nodejs \
     npm \
     openssh-client \
@@ -62,7 +63,8 @@ RUN case "${BUILD_ARCH}" in \
     curl -fsSL "https://github.com/home-assistant/cli/releases/latest/download/ha_${HA_ARCH}" -o /usr/local/bin/ha && \
     chmod +x /usr/local/bin/ha
 
-RUN mkdir -p \
+RUN adduser -D -H -u 22000 -G root codex && \
+    mkdir -p \
     /data/codex-home \
     /data/codex-managed \
     /homeassistant \
@@ -79,13 +81,15 @@ RUN chmod +x \
     /usr/local/bin/codex-start \
     && chmod 440 /etc/sudoers.d/codex-hass-mcp
 
-RUN cat > /root/.tmux.conf << 'EOF'
+RUN cat > /etc/tmux.conf << 'EOF'
 set -g history-limit 20000
 set -ga terminal-overrides ',xterm*:smcup@:rmcup@'
 set -g mouse on
 bind -n WheelUpPane if-shell -F -t = "#{mouse_any_flag}" "send-keys -M" "if -Ft= '#{pane_in_mode}' 'send-keys -M' 'select-pane -t=; copy-mode -e; send-keys -M'"
 bind -n WheelDownPane select-pane -t= \; send-keys -M
 EOF
+
+RUN ln -sf /etc/tmux.conf /root/.tmux.conf
 
 RUN cat > /etc/codex.bashrc << 'EOF'
 export TERM=xterm-256color

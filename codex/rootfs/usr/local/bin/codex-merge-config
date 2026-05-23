@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import json
+import os
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 try:
@@ -137,7 +139,22 @@ def main():
     ]
     emit_table(lines, "", config)
     rendered = "\n".join(line for line in lines if line is not None).rstrip() + "\n"
-    config_path.write_text(rendered, encoding="utf-8")
+    fd, tmp_name = tempfile.mkstemp(
+        dir=config_path.parent,
+        prefix=f".{config_path.name}.",
+        suffix=".tmp",
+        text=True,
+    )
+    tmp_path = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(rendered)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_path, config_path)
+    finally:
+        if tmp_path.exists():
+            tmp_path.unlink()
     return 0
 
 

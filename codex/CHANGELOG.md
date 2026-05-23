@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.7] - 2026-05-24
+
+### Fixed
+- Pre-created the unprivileged Codex runtime user at image build time instead of trying to run `adduser` inside Home Assistant AppArmor at terminal connection time
+- Kept the terminal open with an unprivileged diagnostic shell if session startup fails, instead of letting ttyd fall back to its restart prompt
+- Made direct-ttyd mode explicitly use the shared `anonymous` Codex home instead of partially emulating per-user runtime accounts
+- Moved the tmux socket into the managed Codex state directory and made generated Codex config writable by the runtime user
+- Serialized startup config generation and atomically replaced `config.toml` to avoid races when multiple terminals connect
+- Added base terminfo data for tmux compatibility with `xterm-256color`
+
 ## [0.2.6] - 2026-05-24
 
 ### Fixed

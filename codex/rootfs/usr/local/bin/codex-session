@@ -1,20 +1,43 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
-on_error() {
-  local status=$?
-  echo "[ERROR] Codex session startup failed with exit code ${status}." >&2
-  echo "[ERROR] Check the add-on logs for details, then press Enter to retry." >&2
-  exit "$status"
+fail_open_shell() {
+  local status="${1:-1}"
+  local message="${2:-Codex session startup failed.}"
+  local fallback_root="${CODEX_STATE_ROOT:-/data/codex-home}/fallback"
+
+  echo "[ERROR] ${message}" >&2
+  echo "[ERROR] Startup exit code: ${status}" >&2
+  echo "[INFO] Opening an unprivileged diagnostic shell so the Home Assistant terminal stays usable." >&2
+
+  if id -u codex >/dev/null 2>&1; then
+    if ! mkdir -p "${fallback_root}/.codex" 2>/dev/null; then
+      fallback_root="/tmp/codex-fallback"
+      mkdir -p "${fallback_root}/.codex" 2>/dev/null || true
+    fi
+
+    chown -R 22000:0 "$fallback_root" 2>/dev/null || true
+    chmod 700 "$fallback_root" "${fallback_root}/.codex" 2>/dev/null || true
+    cd "$fallback_root" 2>/dev/null || true
+
+    exec su-exec 22000:0 env \
+      "HOME=$fallback_root" \
+      "CODEX_HOME=${fallback_root}/.codex" \
+      "CODEX_USER_ID=anonymous" \
+      "LOGNAME=codex" \
+      "SHELL=/bin/bash" \
+      "TERM=${TERM:-xterm-256color}" \
+      "USER=codex" \
+      bash --rcfile /etc/codex.bashrc -i
+  fi
+
+  echo "[FATAL] The unprivileged Codex runtime user is missing; refusing to open a root shell." >&2
+  while true; do
+    sleep 3600
+  done
 }
 
-trap on_error ERR
-
-raw_user="${TTYD_USER:-anonymous}"
-safe_user="$(printf '%s' "$raw_user" | tr -cs 'A-Za-z0-9._-' '_' | sed 's/^_*$//')"
-if [[ -z "$safe_user" ]]; then
-  safe_user="anonymous"
-fi
+safe_user="anonymous"
 
 state_root="${CODEX_STATE_ROOT:-/data/codex-home}"
 managed_root="${CODEX_MANAGED_ROOT:-/data/codex-managed}"
@@ -24,52 +47,48 @@ work_dir="${CODEX_WORK_DIR:-/homeassistant}"
 session_persist="${CODEX_SESSION_PERSIST:-true}"
 default_model="${CODEX_DEFAULT_MODEL:-}"
 enable_mcp="${CODEX_ENABLE_MCP:-true}"
-user_map_file="${state_root}/user-map.tsv"
-user_map_lock="${state_root}/.user-map.lock"
+session_uid=22000
+system_user="codex"
 session_gid=0
 
-mkdir -p "$user_codex_home" "$user_root"
-
-while ! mkdir "$user_map_lock" 2>/dev/null; do
-  sleep 0.1
-done
-
-cleanup_lock() {
-  rmdir "$user_map_lock" 2>/dev/null || true
-}
-
-trap cleanup_lock EXIT
-
-user_mapping=""
-if [[ -f "$user_map_file" ]]; then
-  user_mapping="$(awk -F: -v user="$safe_user" '$1 == user { print $0; exit }' "$user_map_file")"
-fi
-
-if [[ -z "$user_mapping" ]]; then
-  last_uid="$(awk -F: 'BEGIN { max = 21999 } NF >= 2 && $2 > max { max = $2 } END { print max }' "$user_map_file" 2>/dev/null || echo 21999)"
-  session_uid=$((last_uid + 1))
-  system_user="codexu${session_uid}"
-  printf '%s:%s:%s\n' "$safe_user" "$session_uid" "$system_user" >> "$user_map_file"
-else
-  IFS=: read -r _ session_uid system_user <<< "$user_mapping"
-fi
-
-cleanup_lock
-trap - EXIT
+mkdir -p "$user_codex_home" "$user_root" || fail_open_shell "$?" "Unable to create Codex state directories."
 
 if ! id -u "$system_user" >/dev/null 2>&1; then
-  adduser -D -H -u "$session_uid" -G root "$system_user" >/dev/null
+  fail_open_shell 1 "Codex runtime user is missing from the image."
 fi
 
 rm -f "${user_codex_home}/AGENTS.md"
-chown -R "$session_uid:$session_gid" "$user_root"
-chmod 700 "$user_root" "$user_codex_home"
+chown -R "$session_uid:$session_gid" "$user_root" || fail_open_shell "$?" "Unable to set Codex state ownership."
+chmod 700 "$user_root" "$user_codex_home" || fail_open_shell "$?" "Unable to secure Codex state directories."
 
 if [[ -f "${managed_root}/AGENTS.md" ]]; then
   ln -sfn "${managed_root}/AGENTS.md" "${user_codex_home}/AGENTS.md"
 fi
 
+config_lock="${user_root}/.config.lock"
+while ! mkdir "$config_lock" 2>/dev/null; do
+  sleep 0.1
+done
+
+cleanup_config_lock() {
+  rmdir "$config_lock" 2>/dev/null || true
+}
+
+trap cleanup_config_lock EXIT
+
 /usr/local/bin/codex-merge-config "${user_codex_home}/config.toml" "$default_model" "$enable_mcp"
+merge_status=$?
+if [[ "$merge_status" -ne 0 ]]; then
+  cleanup_config_lock
+  trap - EXIT
+  fail_open_shell "$merge_status" "Unable to generate Codex config."
+fi
+
+cleanup_config_lock
+trap - EXIT
+
+chown "$session_uid:$session_gid" "${user_codex_home}/config.toml" 2>/dev/null || true
+chown -h "$session_uid:$session_gid" "${user_codex_home}/AGENTS.md" 2>/dev/null || true
 
 if [[ ! -d "$work_dir" ]]; then
   echo "[WARN] Working directory not found: $work_dir. Falling back to /homeassistant" >&2
@@ -81,19 +100,41 @@ export CODEX_HOME="$user_codex_home"
 export CODEX_USER_ID="$safe_user"
 export TERM="${TERM:-xterm-256color}"
 
-cd "$work_dir"
+if ! cd "$work_dir"; then
+  echo "[WARN] Cannot enter working directory: $work_dir. Falling back to /homeassistant" >&2
+  work_dir="/homeassistant"
+  cd "$work_dir" || fail_open_shell "$?" "Unable to enter fallback working directory."
+fi
 
 session_env=(
   "HOME=$user_root"
   "CODEX_HOME=$user_codex_home"
   "CODEX_USER_ID=$safe_user"
+  "LOGNAME=$system_user"
+  "SHELL=/bin/bash"
   "TERM=$TERM"
+  "TMUX_TMPDIR=$user_root"
+  "USER=$system_user"
 )
 
 if [[ "$session_persist" == "true" ]]; then
-  exec su-exec "$session_uid:$session_gid" env "${session_env[@]}" \
-    tmux -L "codex-${safe_user}" new-session -A -s codex -c "$work_dir" \
+  tmux_socket="${user_root}/tmux.sock"
+  if [[ -e "$tmux_socket" && ! -S "$tmux_socket" ]]; then
+    rm -f "$tmux_socket" || true
+  fi
+
+  su-exec "$session_uid:$session_gid" env "${session_env[@]}" \
+    tmux -S "$tmux_socket" new-session -A -s codex -c "$work_dir" \
     "exec /usr/local/bin/codex-shell"
+  tmux_status=$?
+
+  if [[ "$tmux_status" -ne 0 ]]; then
+    echo "[WARN] Persistent tmux session failed with exit code ${tmux_status}; starting Codex without tmux for this connection." >&2
+    exec su-exec "$session_uid:$session_gid" env "${session_env[@]}" \
+      /usr/local/bin/codex-shell
+  fi
+
+  exit 0
 fi
 
 exec su-exec "$session_uid:$session_gid" env "${session_env[@]}" \

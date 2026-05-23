@@ -62,7 +62,7 @@ Useful commands:
 
 The add-on lets you choose a default model without locking the session to that model:
 
-- Set `default_model` in the add-on config to write a persistent default into each user's managed Codex config.
+- Set `default_model` in the add-on config to write a persistent default into the managed Codex config.
 - Leave `default_model` blank to use Codex defaults.
 - Use `/model` inside Codex any time you want to switch models for the current session.
 
@@ -91,11 +91,11 @@ The add-on lets you choose a default model without locking the session to that m
 | `/ssl` | SSL files, mounted read-only |
 | `/backup` | Backups, mounted read-only |
 
-The add-on manages user-level Codex defaults in each user's `~/.codex/config.toml`. Project-specific behavior should live in `/homeassistant/.codex/config.toml` and `/homeassistant/AGENTS.md`.
+The add-on manages user-level Codex defaults in the managed `~/.codex/config.toml`. Project-specific behavior should live in `/homeassistant/.codex/config.toml` and `/homeassistant/AGENTS.md`.
 
 ## Home Assistant MCP
 
-When `enable_mcp` is on, the add-on writes a managed `homeassistant` MCP server entry into each user's Codex config. The server is launched through `hass-mcp`, with Home Assistant Supervisor credentials passed only to the helper that starts the MCP server. They are not stored in the add-on options and are not exported into the user's interactive shell.
+When `enable_mcp` is on, the add-on writes a managed `homeassistant` MCP server entry into the managed Codex config. The server is launched through `hass-mcp`, with Home Assistant Supervisor credentials passed only to the helper that starts the MCP server. They are not stored in the add-on options and are not exported into the user's interactive shell.
 
 ## Session Persistence
 
