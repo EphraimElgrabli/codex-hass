@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.14] - 2026-05-24
+
+### Added
+- Installed `bubblewrap` so Codex workspace sandbox mode has the Linux sandbox runtime it expects
+
+### Fixed
+- Added a default `BUILD_FROM` value to silence Docker's invalid default build-arg warning while preserving Home Assistant's per-architecture build argument override
+
 ## [0.2.13] - 2026-05-24
 
 ### Fixed

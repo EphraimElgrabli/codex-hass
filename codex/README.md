@@ -102,6 +102,8 @@ Leave `default_model` blank if you want Codex to use its own default or if you m
 
 `full_access` does not grant access outside the container or outside the folders Home Assistant maps into this App. It does remove Codex's local workspace sandbox restrictions inside those available paths.
 
+When `workspace` is selected, Codex uses its Linux sandbox runtime inside the App container. Version `0.2.14` includes `bubblewrap` for this path. If Home Assistant or the host still blocks sandbox creation, switch to `full_access` only if you deliberately want to bypass Codex's local sandbox.
+
 ## Approval Prompts and Autonomous Mode
 
 `codex_approval_policy` controls whether Codex asks before running actions:
