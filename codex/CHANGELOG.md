@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.13] - 2026-05-24
+
+### Fixed
+- Repair saved Codex UI state when `tui.model_availability_nux` is stored as a table/map instead of the integer expected by current Codex CLI versions
+- Back up semantically repaired config files as `config.toml.repaired.bak`
+
 ## [0.2.12] - 2026-05-24
 
 ### Fixed

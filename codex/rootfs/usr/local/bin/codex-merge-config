@@ -87,6 +87,12 @@ def repair_invalid_project_tables(text):
     return "\n".join(repaired_lines) + ("\n" if text.endswith("\n") else "")
 
 
+def backup_config(path, suffix):
+    backup_path = path.with_suffix(path.suffix + suffix)
+    shutil.copy2(path, backup_path)
+    return backup_path
+
+
 def load_existing_config(path):
     if not path.exists():
         return {}
@@ -100,19 +106,33 @@ def load_existing_config(path):
         if repaired_text is not None:
             try:
                 loaded = tomllib.loads(repaired_text)
-                backup_path = path.with_suffix(path.suffix + ".invalid.bak")
-                shutil.copy2(path, backup_path)
+                backup_config(path, ".invalid.bak")
                 return loaded if isinstance(loaded, dict) else {}
             except tomllib.TOMLDecodeError:
                 pass
 
-        backup_path = path.with_suffix(path.suffix + ".invalid.bak")
-        shutil.copy2(path, backup_path)
+        backup_config(path, ".invalid.bak")
         return {}
 
     if not isinstance(loaded, dict):
         return {}
     return loaded
+
+
+def is_u32(value):
+    return isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= 4294967295
+
+
+def repair_incompatible_codex_values(config):
+    repaired = []
+    tui = config.get("tui")
+    if isinstance(tui, dict):
+        if "model_availability_nux" in tui and not is_u32(tui["model_availability_nux"]):
+            tui.pop("model_availability_nux", None)
+            repaired.append("tui.model_availability_nux")
+        if not tui:
+            config.pop("tui", None)
+    return repaired
 
 
 def main():
@@ -131,6 +151,9 @@ def main():
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config = load_existing_config(config_path)
+    semantic_repairs = repair_incompatible_codex_values(config)
+    if semantic_repairs and config_path.exists():
+        backup_config(config_path, ".repaired.bak")
 
     legacy_metadata = config.pop("__homeassistant_addon", None)
     if "__homeassistant_app" not in config and isinstance(legacy_metadata, dict):

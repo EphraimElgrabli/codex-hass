@@ -230,6 +230,12 @@ codex
 
 The shell launcher repairs the managed config before starting Codex. If the file was invalid, the old copy is kept beside it as `config.toml.invalid.bak`.
 
+### `config.toml` mentions `tui.model_availability_nux`
+
+Some Codex CLI versions changed the expected type of this UI state value. If an older saved config stores it as a table/map, newer Codex versions refuse to start.
+
+Version `0.2.13` removes that incompatible UI state automatically and keeps the previous file as `config.toml.repaired.bak`.
+
 ### MCP is missing
 
 1. Confirm `enable_mcp` is `true`.
