@@ -218,6 +218,18 @@ codex
 
 Check the App log for startup validation errors.
 
+### `config.toml` mentions `[projects./homeassistant]`
+
+Older App versions could write an invalid project table after Codex trusted `/homeassistant`. Version `0.2.12` repairs that automatically before Codex starts.
+
+If you are already at a shell prompt, run:
+
+```bash
+codex
+```
+
+The shell launcher repairs the managed config before starting Codex. If the file was invalid, the old copy is kept beside it as `config.toml.invalid.bak`.
+
 ### MCP is missing
 
 1. Confirm `enable_mcp` is `true`.

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -11,6 +12,16 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     print("tomllib is required", file=sys.stderr)
     sys.exit(1)
+
+BARE_KEY_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+INVALID_PROJECT_TABLE_RE = re.compile(r"^\[projects\.(\/[^\]]+)\]$")
+
+
+def format_key(key):
+    key = str(key)
+    if BARE_KEY_RE.fullmatch(key):
+        return key
+    return json.dumps(key)
 
 
 def format_scalar(value):
@@ -23,19 +34,23 @@ def format_scalar(value):
     if isinstance(value, list):
         return "[" + ", ".join(format_inline(item) for item in value) + "]"
     if isinstance(value, dict):
-        items = ", ".join(f"{key} = {format_inline(val)}" for key, val in value.items())
+        items = ", ".join(f"{format_key(key)} = {format_inline(val)}" for key, val in value.items())
         return "{ " + items + " }"
     raise TypeError(f"Unsupported TOML value type: {type(value)!r}")
 
 
 def format_inline(value):
     if isinstance(value, dict):
-        items = ", ".join(f"{key} = {format_inline(val)}" for key, val in value.items())
+        items = ", ".join(f"{format_key(key)} = {format_inline(val)}" for key, val in value.items())
         return "{ " + items + " }"
     return format_scalar(value)
 
 
-def emit_table(lines, table_name, mapping):
+def format_table_path(table_path):
+    return ".".join(format_key(part) for part in table_path)
+
+
+def emit_table(lines, table_path, mapping):
     scalar_items = []
     child_tables = []
     for key, value in mapping.items():
@@ -44,18 +59,32 @@ def emit_table(lines, table_name, mapping):
         else:
             scalar_items.append((key, value))
 
-    if table_name:
-        lines.append(f"[{table_name}]")
+    if table_path:
+        lines.append(f"[{format_table_path(table_path)}]")
     for key, value in scalar_items:
-        lines.append(f"{key} = {format_scalar(value)}")
-    if table_name and child_tables:
+        lines.append(f"{format_key(key)} = {format_scalar(value)}")
+    if table_path and child_tables:
         lines.append("")
 
     for index, (key, value) in enumerate(child_tables):
-        child_name = f"{table_name}.{key}" if table_name else key
-        emit_table(lines, child_name, value)
+        emit_table(lines, [*table_path, key], value)
         if index != len(child_tables) - 1:
             lines.append("")
+
+
+def repair_invalid_project_tables(text):
+    repaired_lines = []
+    changed = False
+    for line in text.splitlines():
+        match = INVALID_PROJECT_TABLE_RE.match(line.strip())
+        if match:
+            repaired_lines.append(f"[projects.{json.dumps(match.group(1))}]")
+            changed = True
+        else:
+            repaired_lines.append(line)
+    if not changed:
+        return None
+    return "\n".join(repaired_lines) + ("\n" if text.endswith("\n") else "")
 
 
 def load_existing_config(path):
@@ -66,6 +95,17 @@ def load_existing_config(path):
         with path.open("rb") as handle:
             loaded = tomllib.load(handle)
     except tomllib.TOMLDecodeError:
+        text = path.read_text(encoding="utf-8", errors="replace")
+        repaired_text = repair_invalid_project_tables(text)
+        if repaired_text is not None:
+            try:
+                loaded = tomllib.loads(repaired_text)
+                backup_path = path.with_suffix(path.suffix + ".invalid.bak")
+                shutil.copy2(path, backup_path)
+                return loaded if isinstance(loaded, dict) else {}
+            except tomllib.TOMLDecodeError:
+                pass
+
         backup_path = path.with_suffix(path.suffix + ".invalid.bak")
         shutil.copy2(path, backup_path)
         return {}
@@ -198,7 +238,7 @@ def main():
         "# Project-specific overrides belong in /homeassistant/.codex/config.toml for trusted projects.",
         "",
     ]
-    emit_table(lines, "", config)
+    emit_table(lines, [], config)
     rendered = "\n".join(line for line in lines if line is not None).rstrip() + "\n"
     fd, tmp_name = tempfile.mkstemp(
         dir=config_path.parent,

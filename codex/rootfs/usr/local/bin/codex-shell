@@ -9,8 +9,25 @@ if [[ ! -d "$work_dir" ]]; then
 fi
 cd "$work_dir" 2>/dev/null || cd /homeassistant
 
+repair_codex_config() {
+  local codex_home="${CODEX_HOME:-${HOME}/.codex}"
+  local config_path="${codex_home}/config.toml"
+
+  if [[ -x /usr/local/bin/codex-merge-config ]]; then
+    /usr/local/bin/codex-merge-config \
+      "$config_path" \
+      "${CODEX_DEFAULT_MODEL:-}" \
+      "${CODEX_ENABLE_MCP:-true}" \
+      "${CODEX_PERMISSIONS:-workspace}" \
+      "${CODEX_APPROVAL_POLICY:-on-request}" || {
+        echo "[WARN] Unable to repair Codex config before launch." >&2
+      }
+  fi
+}
+
 if command -v codex >/dev/null 2>&1; then
   while true; do
+    repair_codex_config
     codex
     codex_status=$?
     if [[ "$codex_status" -eq 0 ]]; then

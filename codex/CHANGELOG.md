@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.12] - 2026-05-24
+
+### Fixed
+- Quote TOML table keys for project paths such as `/homeassistant` so generated `config.toml` remains valid after Codex records trusted projects
+- Repair legacy invalid `[projects./homeassistant]` config sections by backing up the bad file and rewriting them as `[projects."/homeassistant"]`
+- Re-run Codex config merge and repair before every Codex launch from the terminal shell, including retries after Codex exits
+
 ## [0.2.11] - 2026-05-24
 
 ### Added
