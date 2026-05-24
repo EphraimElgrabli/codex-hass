@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 - Added a GitHub Actions workflow to publish prebuilt `amd64` and `aarch64` Codex App images to GitHub Container Registry
 - Added the `image` field so Home Assistant pulls `ghcr.io/kecksdigital/codex-hass:<version>` instead of building locally
 
+### Fixed
+- Passed the per-architecture Home Assistant base image into the GHCR build workflow so Docker builds do not rely on local Supervisor build arguments
+
 ### Changed
 - Documented the difference between Home Assistant App updates and optional Codex CLI startup updates
 
