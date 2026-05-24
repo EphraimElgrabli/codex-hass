@@ -37,6 +37,12 @@ configuration:
       Default local sandbox profile for Codex. Workspace allows normal
       Home Assistant project work. Full access maps to sandbox danger-full-access
       and removes local sandbox restrictions.
+  codex_approval_policy:
+    name: Codex Approval Policy
+    description: >-
+      Controls when Codex asks before running actions. Use on-request for
+      interactive safety, untrusted to ask for non-trusted commands, or never
+      for autonomous execution without approval prompts.
   auto_update_codex:
     name: Auto-update Codex CLI
     description: >-

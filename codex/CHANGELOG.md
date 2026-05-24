@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.11] - 2026-05-24
+
+### Added
+- Added a `codex_approval_policy` App option with `on-request`, `untrusted`, and `never` choices
+- Documented autonomous mode using `codex_permissions: full_access` together with `codex_approval_policy: never`
+
+### Changed
+- Generate Codex `approval_policy` from the App option so users can disable per-action approval prompts when they explicitly choose autonomous mode
+
 ## [0.2.10] - 2026-05-24
 
 ### Added

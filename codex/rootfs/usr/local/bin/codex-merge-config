@@ -76,9 +76,9 @@ def load_existing_config(path):
 
 
 def main():
-    if len(sys.argv) not in (4, 5):
+    if len(sys.argv) not in (4, 5, 6):
         print(
-            "usage: codex-merge-config <config_path> <default_model> <enable_mcp> [codex_permissions]",
+            "usage: codex-merge-config <config_path> <default_model> <enable_mcp> [codex_permissions] [codex_approval_policy]",
             file=sys.stderr,
         )
         return 1
@@ -86,7 +86,8 @@ def main():
     config_path = Path(sys.argv[1])
     default_model = sys.argv[2]
     enable_mcp = sys.argv[3].lower() == "true"
-    codex_permissions = sys.argv[4] if len(sys.argv) == 5 else "workspace"
+    codex_permissions = sys.argv[4] if len(sys.argv) >= 5 else "workspace"
+    codex_approval_policy = sys.argv[5] if len(sys.argv) == 6 else "on-request"
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config = load_existing_config(config_path)
@@ -136,6 +137,31 @@ def main():
         metadata.pop("managed_sandbox_mode", None)
     else:
         metadata.pop("managed_sandbox_mode", None)
+
+    approval_policies = {
+        "on-request": "on-request",
+        "never": "never",
+        "untrusted": "untrusted",
+    }
+    managed_approval_policy = approval_policies.get(codex_approval_policy)
+    previous_managed_approval_policy = metadata.get("managed_approval_policy")
+    if managed_approval_policy:
+        should_manage_approval_policy = (
+            "approval_policy" not in config
+            or previous_managed_approval_policy is not None
+            or codex_approval_policy == "never"
+            or config.get("approval_policy") == previous_managed_approval_policy
+        )
+        if should_manage_approval_policy:
+            config["approval_policy"] = managed_approval_policy
+            metadata["managed_approval_policy"] = managed_approval_policy
+        else:
+            metadata.pop("managed_approval_policy", None)
+    elif config.get("approval_policy") == previous_managed_approval_policy:
+        config.pop("approval_policy", None)
+        metadata.pop("managed_approval_policy", None)
+    else:
+        metadata.pop("managed_approval_policy", None)
 
     mcp_servers = config.setdefault("mcp_servers", {})
     if not isinstance(mcp_servers, dict):

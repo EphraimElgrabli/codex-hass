@@ -39,6 +39,12 @@ configuration:
       Perfil de sandbox local predeterminado para Codex. Workspace permite
       trabajo normal en el proyecto de Home Assistant. Full access usa
       sandbox danger-full-access y elimina restricciones locales de sandbox.
+  codex_approval_policy:
+    name: Política de Aprobación de Codex
+    description: >-
+      Controla cuándo Codex pide aprobación antes de ejecutar acciones. Usa
+      on-request para seguridad interactiva, untrusted para pedir aprobación en
+      comandos no confiables, o never para ejecución autónoma sin avisos.
   auto_update_codex:
     name: Actualizar Codex CLI automáticamente
     description: >-

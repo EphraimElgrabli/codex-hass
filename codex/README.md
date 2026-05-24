@@ -76,6 +76,7 @@ When Codex or a prompt mentions `/config`, treat it as `/homeassistant` in this 
 | `session_persistence` | `false` | Reattaches terminal sessions through tmux when enabled |
 | `default_model` | `gpt-5.4` | Writes the managed startup model for Codex |
 | `codex_permissions` | `workspace` | Selects Codex local sandbox behavior |
+| `codex_approval_policy` | `on-request` | Selects when Codex asks before running actions |
 | `auto_update_codex` | `false` | Optionally updates Codex CLI at startup |
 | `codex_update_timeout` | `300` | Maximum seconds for the optional startup update |
 
@@ -100,6 +101,25 @@ Leave `default_model` blank if you want Codex to use its own default or if you m
 | `full_access` | `danger-full-access` | You deliberately want broad local access inside the container |
 
 `full_access` does not grant access outside the container or outside the folders Home Assistant maps into this App. It does remove Codex's local workspace sandbox restrictions inside those available paths.
+
+## Approval Prompts and Autonomous Mode
+
+`codex_approval_policy` controls whether Codex asks before running actions:
+
+| Option | Codex setting | Behavior |
+|--------|---------------|----------|
+| `on-request` | `approval_policy = "on-request"` | Codex asks when it decides approval is needed |
+| `untrusted` | `approval_policy = "untrusted"` | Trusted read-style commands run, higher-risk commands ask |
+| `never` | `approval_policy = "never"` | Codex does not ask for approval before actions |
+
+For autonomous operation, set:
+
+```yaml
+codex_permissions: full_access
+codex_approval_policy: never
+```
+
+This is intentionally explicit. `full_access` removes the local sandbox and `never` removes action approval prompts. Only use both when you are comfortable letting Codex run commands inside the App container without per-action confirmation.
 
 ## Home Assistant MCP
 

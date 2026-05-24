@@ -1,6 +1,6 @@
 name: Codex
 description: OpenAI Codex App for Home Assistant with terminal access, model controls, and optional Home Assistant MCP integration
-version: "0.2.10"
+version: "0.2.11"
 slug: codex
 url: https://github.com/kecksdigital/codex-hass
 image: ghcr.io/kecksdigital/codex-hass
@@ -34,6 +34,7 @@ options:
   session_persistence: false
   default_model: "gpt-5.4"
   codex_permissions: workspace
+  codex_approval_policy: on-request
   auto_update_codex: false
   codex_update_timeout: 300
 schema:
@@ -44,6 +45,7 @@ schema:
   session_persistence: bool
   default_model: str?
   codex_permissions: list(workspace|full_access)
+  codex_approval_policy: list(on-request|never|untrusted)
   auto_update_codex: bool
   codex_update_timeout: int(30,300)
 environment:

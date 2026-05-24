@@ -39,11 +39,13 @@ On first launch, Codex prompts you to sign in. The Codex CLI supports ChatGPT si
 
 - Model: `gpt-5.4`
 - Access: `workspace`
+- Approval policy: `on-request`
 - Session persistence: off for a cleaner first sign-in
 - MCP: on
 - Auto-update Codex CLI: off
 
 Use `full_access` only when you want Codex to run with broad local access inside the App container.
+Use `codex_approval_policy: never` only when you want autonomous execution without per-action approval prompts.
 
 ## Updates
 

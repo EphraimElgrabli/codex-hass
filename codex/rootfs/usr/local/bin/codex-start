@@ -15,6 +15,7 @@ work_dir="$(jq -r '.working_directory // "/homeassistant"' /data/options.json)"
 enable_mcp="$(jq -r '.enable_mcp // true' /data/options.json)"
 default_model="$(jq -r '.default_model // ""' /data/options.json)"
 codex_permissions="$(jq -r '.codex_permissions // "workspace"' /data/options.json)"
+codex_approval_policy="$(jq -r '.codex_approval_policy // "on-request"' /data/options.json)"
 auto_update_codex="$(jq -r '.auto_update_codex // false' /data/options.json)"
 codex_update_timeout="$(jq -r '.codex_update_timeout // 300' /data/options.json)"
 case "$codex_update_timeout" in
@@ -31,6 +32,7 @@ export CODEX_SESSION_PERSIST="$session_persist"
 export CODEX_ENABLE_MCP="$enable_mcp"
 export CODEX_DEFAULT_MODEL="$default_model"
 export CODEX_PERMISSIONS="$codex_permissions"
+export CODEX_APPROVAL_POLICY="$codex_approval_policy"
 export CODEX_HA_URL="http://supervisor/core"
 export CODEX_SUPERVISOR_TOKEN_FILE="/tmp/codex/ha-token"
 
@@ -157,7 +159,7 @@ validate_home="$CODEX_MANAGED_ROOT/validate-home"
 rm -rf "$validate_home"
 mkdir -p "$validate_home"
 trap 'rm -rf "$validate_home"' EXIT
-/usr/local/bin/codex-merge-config "${validate_home}/config.toml" "$default_model" "$enable_mcp" "$codex_permissions"
+/usr/local/bin/codex-merge-config "${validate_home}/config.toml" "$default_model" "$enable_mcp" "$codex_permissions" "$codex_approval_policy"
 if CODEX_HOME="$validate_home" codex debug prompt-input --help >/dev/null 2>&1; then
   CODEX_HOME="$validate_home" codex debug prompt-input "startup validation" >/dev/null
 else
