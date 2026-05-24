@@ -24,6 +24,8 @@ The App keeps OpenAI credentials out of Home Assistant options. Codex signs in u
 4. Start Codex.
 5. Open Codex from the Home Assistant sidebar.
 
+The App is published as a prebuilt GitHub Container Registry image, so Home Assistant should download the image instead of compiling it on your Home Assistant machine.
+
 ## First Sign-In
 
 When the terminal opens, Codex starts automatically.
@@ -158,6 +160,20 @@ npm install -g @openai/codex@latest
 ```
 
 The update is bounded by `codex_update_timeout`. If the update fails or times out, the App continues with the image-installed Codex version and logs the failure.
+
+## Home Assistant App Updates
+
+Home Assistant App updates are separate from Codex CLI updates.
+
+The App version comes from `codex/config.yaml`. When a new version is pushed to this repository, the GitHub Actions workflow publishes matching images to:
+
+```text
+ghcr.io/kecksdigital/codex-hass:<version>
+```
+
+Home Assistant then sees the higher version and pulls the matching prebuilt image. Enable **Auto update** on the Codex App page if you want Home Assistant to install those App updates automatically.
+
+If a new version does not appear immediately, open the Add-on Store and run **Check for updates** from the menu. Home Assistant may cache custom repository metadata briefly.
 
 ## Troubleshooting
 

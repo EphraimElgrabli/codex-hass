@@ -22,6 +22,7 @@ Manual install:
 
 - OpenAI Codex CLI running in Home Assistant.
 - A web terminal served through Home Assistant ingress.
+- Prebuilt GHCR images for faster installs and Home Assistant updates.
 - Direct access to `/homeassistant`, `/share`, and `/media`.
 - Read-only access to `/ssl` and `/backup`.
 - Optional Home Assistant MCP integration for entity lookup and service calls.
@@ -43,6 +44,18 @@ On first launch, Codex prompts you to sign in. The Codex CLI supports ChatGPT si
 - Auto-update Codex CLI: off
 
 Use `full_access` only when you want Codex to run with broad local access inside the App container.
+
+## Updates
+
+Home Assistant updates the Codex App when this repository publishes a higher version in `codex/config.yaml`.
+
+The App uses prebuilt images from GitHub Container Registry:
+
+```text
+ghcr.io/kecksdigital/codex-hass:<version>
+```
+
+Enable **Auto update** on the Codex App page in Home Assistant if you want Home Assistant to install future App versions automatically.
 
 ## Documentation
 
