@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.15] - 2026-05-31
+
+### Fixed
+- Stopped exposing `/root/.npm` as the runtime npm cache so Codex CLI updates no longer fail with `EACCES` after the terminal drops to the unprivileged `codex` user
+- Gave interactive Codex sessions a persistent user-owned npm cache and global prefix under the persistent Codex user home so `npm install -g @openai/codex@latest` works from the terminal and stays on `PATH`
+- Isolated optional startup-time root CLI updates to a temporary root-owned npm cache instead of reusing the interactive session cache
+
 ## [0.2.14] - 2026-05-24
 
 ### Added

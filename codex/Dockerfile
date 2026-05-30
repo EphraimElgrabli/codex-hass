@@ -11,8 +11,7 @@ ENV \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     TERM=xterm-256color \
-    NODE_OPTIONS=--max-old-space-size=512 \
-    NPM_CONFIG_CACHE=/root/.npm
+    NODE_OPTIONS=--max-old-space-size=512
 
 RUN apk add --no-cache \
     acl \
@@ -54,8 +53,9 @@ RUN case "${BUILD_ARCH}" in \
     echo "${TTYD_SHA256}  /usr/bin/ttyd" | sha256sum -c - && \
     chmod +x /usr/bin/ttyd
 
-RUN npm install -g @openai/codex \
-    && codex --version
+RUN NPM_CONFIG_CACHE=/tmp/npm-cache npm install -g @openai/codex \
+    && codex --version \
+    && rm -rf /tmp/npm-cache
 
 RUN pip3 install --no-cache-dir --break-system-packages hass-mcp
 
