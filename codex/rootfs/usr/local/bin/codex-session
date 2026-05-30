@@ -5,19 +5,28 @@ fail_open_shell() {
   local status="${1:-1}"
   local message="${2:-Codex session startup failed.}"
   local fallback_root="${CODEX_STATE_ROOT:-/data/codex-home}/fallback"
+  local fallback_npm_cache="${fallback_root}/.npm"
+  local fallback_npm_prefix="${fallback_root}/.local"
+  local fallback_npm_bin="${fallback_npm_prefix}/bin"
+  local fallback_path="${fallback_npm_bin}:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
 
   echo "[ERROR] ${message}" >&2
   echo "[ERROR] Startup exit code: ${status}" >&2
   echo "[INFO] Opening an unprivileged diagnostic shell so the Home Assistant terminal stays usable." >&2
 
   if id -u codex >/dev/null 2>&1; then
-    if ! mkdir -p "${fallback_root}/.codex" 2>/dev/null; then
+    if ! mkdir -p "${fallback_root}/.codex" "$fallback_npm_cache" "$fallback_npm_bin" 2>/dev/null; then
       fallback_root="/tmp/codex-fallback"
-      mkdir -p "${fallback_root}/.codex" 2>/dev/null || true
+      fallback_npm_cache="${fallback_root}/.npm"
+      fallback_npm_prefix="${fallback_root}/.local"
+      fallback_npm_bin="${fallback_npm_prefix}/bin"
+      fallback_path="${fallback_npm_bin}:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
+      mkdir -p "${fallback_root}/.codex" "$fallback_npm_cache" "$fallback_npm_bin" 2>/dev/null || true
     fi
 
     chown -R 22000:0 "$fallback_root" 2>/dev/null || true
-    chmod 700 "$fallback_root" "${fallback_root}/.codex" 2>/dev/null || true
+    chmod 700 "$fallback_root" "${fallback_root}/.codex" "$fallback_npm_cache" "$fallback_npm_prefix" 2>/dev/null || true
+    chmod 755 "$fallback_npm_bin" 2>/dev/null || true
     cd "$fallback_root" 2>/dev/null || true
 
     exec su-exec 22000:0 env \
@@ -25,6 +34,9 @@ fail_open_shell() {
       "CODEX_HOME=${fallback_root}/.codex" \
       "CODEX_USER_ID=anonymous" \
       "LOGNAME=codex" \
+      "NPM_CONFIG_CACHE=$fallback_npm_cache" \
+      "NPM_CONFIG_PREFIX=$fallback_npm_prefix" \
+      "PATH=$fallback_path" \
       "SHELL=/bin/bash" \
       "TERM=${TERM:-xterm-256color}" \
       "USER=codex" \
@@ -43,6 +55,9 @@ state_root="${CODEX_STATE_ROOT:-/data/codex-home}"
 managed_root="${CODEX_MANAGED_ROOT:-/data/codex-managed}"
 user_root="${state_root}/users/${safe_user}"
 user_codex_home="${user_root}/.codex"
+user_npm_cache="${user_root}/.npm"
+user_npm_prefix="${user_root}/.local"
+user_npm_bin="${user_npm_prefix}/bin"
 work_dir="${CODEX_WORK_DIR:-/homeassistant}"
 session_persist="${CODEX_SESSION_PERSIST:-false}"
 default_model="${CODEX_DEFAULT_MODEL:-}"
@@ -52,8 +67,9 @@ codex_approval_policy="${CODEX_APPROVAL_POLICY:-on-request}"
 session_uid=22000
 system_user="codex"
 session_gid=0
+session_path="${user_npm_bin}:${PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}"
 
-mkdir -p "$user_codex_home" "$user_root" || fail_open_shell "$?" "Unable to create Codex state directories."
+mkdir -p "$user_codex_home" "$user_root" "$user_npm_cache" "$user_npm_bin" || fail_open_shell "$?" "Unable to create Codex state directories."
 
 if ! id -u "$system_user" >/dev/null 2>&1; then
   fail_open_shell 1 "Codex runtime user is missing from the image."
@@ -61,7 +77,8 @@ fi
 
 rm -f "${user_codex_home}/AGENTS.md"
 chown -R "$session_uid:$session_gid" "$user_root" || fail_open_shell "$?" "Unable to set Codex state ownership."
-chmod 700 "$user_root" "$user_codex_home" || fail_open_shell "$?" "Unable to secure Codex state directories."
+chmod 700 "$user_root" "$user_codex_home" "$user_npm_cache" "$user_npm_prefix" || fail_open_shell "$?" "Unable to secure Codex state directories."
+chmod 755 "$user_npm_bin" || fail_open_shell "$?" "Unable to prepare npm bin directory."
 
 if [[ -f "${managed_root}/AGENTS.md" ]]; then
   ln -sfn "${managed_root}/AGENTS.md" "${user_codex_home}/AGENTS.md"
@@ -100,6 +117,9 @@ fi
 export HOME="$user_root"
 export CODEX_HOME="$user_codex_home"
 export CODEX_USER_ID="$safe_user"
+export NPM_CONFIG_CACHE="$user_npm_cache"
+export NPM_CONFIG_PREFIX="$user_npm_prefix"
+export PATH="$session_path"
 export TERM="${TERM:-xterm-256color}"
 
 if ! cd "$work_dir"; then
@@ -118,6 +138,9 @@ session_env=(
   "CODEX_USER_ID=$safe_user"
   "CODEX_WORK_DIR=$work_dir"
   "LOGNAME=$system_user"
+  "NPM_CONFIG_CACHE=$user_npm_cache"
+  "NPM_CONFIG_PREFIX=$user_npm_prefix"
+  "PATH=$session_path"
   "SHELL=/bin/bash"
   "TERM=$TERM"
   "TMUX_TMPDIR=$user_root"
