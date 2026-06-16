@@ -117,3 +117,4 @@ jobs:
           image-tags: |
             ${{ needs.init.outputs.version }}
             latest
+          registry-prefix: ghcr.io/${{ env.IMAGE_OWNER }}
