@@ -1,10 +1,10 @@
 ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base-python:3.13-alpine3.21
 FROM ${BUILD_FROM}
 
-LABEL maintainer="Kecks Digital"
+LABEL maintainer="Ephraim Elgrabli"
 LABEL org.opencontainers.image.title="Codex App for Home Assistant"
 LABEL org.opencontainers.image.description="OpenAI Codex App for the Home Assistant sidebar with terminal access, model controls, and optional MCP integration"
-LABEL org.opencontainers.image.source="https://github.com/kecksdigital/codex-hass"
+LABEL org.opencontainers.image.source="https://github.com/EphraimElgrabli/codex-hass"
 LABEL org.opencontainers.image.licenses="MIT"
 
 ENV \
@@ -80,6 +80,7 @@ RUN chmod +x \
     /usr/local/bin/hass-mcp-wrapper \
     /usr/local/bin/hass-mcp-root-helper \
     /usr/local/bin/codex-merge-config \
+    /usr/local/bin/codex-hass-launcher \
     /usr/local/bin/codex-shell \
     /usr/local/bin/codex-session \
     /usr/local/bin/codex-start \
@@ -107,6 +108,7 @@ PS1='\[\033[1;36m\]codex\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\]\$ '
 alias ll='ls -la'
 alias ha-config='cd /homeassistant'
 alias ha-logs='cat /homeassistant/home-assistant.log 2>/dev/null || echo "Log not found"'
+alias codex='/usr/local/bin/codex-hass-launcher'
 EOF
 
 RUN echo 'source /etc/codex.bashrc' > /root/.profile

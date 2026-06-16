@@ -25,10 +25,15 @@ repair_codex_config() {
   fi
 }
 
-if command -v codex >/dev/null 2>&1; then
+codex_command="/usr/local/bin/codex-hass-launcher"
+if [[ ! -x "$codex_command" ]]; then
+  codex_command="$(command -v codex || true)"
+fi
+
+if [[ -n "$codex_command" ]]; then
   while true; do
     repair_codex_config
-    codex
+    "$codex_command"
     codex_status=$?
     if [[ "$codex_status" -eq 0 ]]; then
       break

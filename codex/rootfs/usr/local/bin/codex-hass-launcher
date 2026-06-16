@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -u
+
+user_codex="${NPM_CONFIG_PREFIX:-${HOME:-/data/codex-home/users/anonymous}/.local}/bin/codex"
+system_codex="/usr/local/bin/codex"
+
+try_exec_codex() {
+  local candidate="$1"
+  shift
+
+  if [[ ! -e "$candidate" ]]; then
+    return 127
+  fi
+
+  local first_line=""
+  IFS= read -r first_line < "$candidate" 2>/dev/null || true
+
+  # Home Assistant may restrict direct script execution from /data. Running
+  # npm-installed Codex through node keeps in-terminal CLI updates usable.
+  if [[ "$first_line" == "#!"*node* ]]; then
+    exec node "$candidate" "$@"
+  fi
+
+  if [[ -x "$candidate" ]]; then
+    exec "$candidate" "$@"
+  fi
+
+  return 126
+}
+
+if [[ "$user_codex" != "$system_codex" && -e "$user_codex" ]]; then
+  try_exec_codex "$user_codex" "$@"
+  echo "[WARN] User-installed Codex at $user_codex could not be launched; falling back to image-installed Codex." >&2
+fi
+
+try_exec_codex "$system_codex" "$@"
+status=$?
+echo "[ERROR] Codex CLI is not installed or could not be launched." >&2
+exit "$status"

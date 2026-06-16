@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.16] - 2026-06-16
+
+### Added
+- Added a Home Assistant launcher for Codex that can run npm-updated Codex entrypoints from the persistent user prefix through `node`, avoiding `/data` shebang execution failures after in-terminal CLI updates.
+
+### Changed
+- Routed interactive `codex` commands and automatic terminal startup through the launcher while preserving fallback to the image-installed Codex CLI.
+- Updated repository metadata and GHCR image references for the EphraimElgrabli fork.
+- Updated the add-on icon and logo artwork.
+
 ## [0.2.15] - 2026-05-31
 
 ### Fixed

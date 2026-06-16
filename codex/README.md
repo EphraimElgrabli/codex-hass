@@ -18,7 +18,7 @@ The App keeps OpenAI credentials out of Home Assistant options. Codex signs in u
 
 ## Install
 
-1. Add `https://github.com/kecksdigital/codex-hass` to the Home Assistant Add-on Store repositories.
+1. Add `https://github.com/EphraimElgrabli/codex-hass` to the Home Assistant Add-on Store repositories.
 2. Install **Codex**.
 3. Review the App options.
 4. Start Codex.
@@ -185,6 +185,8 @@ The update is bounded by `codex_update_timeout`. If the update fails or times ou
 
 When you run npm global installs from the interactive terminal, the App uses a persistent user-owned npm cache and prefix under the Codex user's home directory. That keeps `npm install -g @openai/codex@latest` writable for the unprivileged runtime user and makes the installed `codex` binary available on `PATH` in later sessions.
 
+The terminal routes `codex` through an App-owned launcher so npm-updated Codex entrypoints stored under `/data/codex-home` can run through `node` even when Home Assistant restricts direct shebang execution from persistent data mounts. If the user-installed CLI cannot be launched, the App falls back to the image-installed Codex CLI.
+
 ## Home Assistant App Updates
 
 Home Assistant App updates are separate from Codex CLI updates.
@@ -192,7 +194,7 @@ Home Assistant App updates are separate from Codex CLI updates.
 The App version comes from `codex/config.yaml`. When a new version is pushed to this repository, the GitHub Actions workflow publishes matching images to:
 
 ```text
-ghcr.io/kecksdigital/codex-hass:<version>
+ghcr.io/ephraimelgrabli/codex-hass:<version>
 ```
 
 Home Assistant then sees the higher version and pulls the matching prebuilt image. Enable **Auto update** on the Codex App page if you want Home Assistant to install those App updates automatically.
@@ -266,6 +268,6 @@ Disable `auto_update_codex` unless you specifically need the newest CLI on every
 
 ## Support
 
-- [Repository](https://github.com/kecksdigital/codex-hass)
-- [Issues](https://github.com/kecksdigital/codex-hass/issues)
+- [Repository](https://github.com/EphraimElgrabli/codex-hass)
+- [Issues](https://github.com/EphraimElgrabli/codex-hass/issues)
 - [Home Assistant Community](https://community.home-assistant.io/)
