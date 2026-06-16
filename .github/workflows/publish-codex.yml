@@ -12,6 +12,7 @@ on:
 env:
   ARCHITECTURES: '["amd64", "aarch64"]'
   IMAGE_NAME: codex-hass
+  IMAGE_OWNER: ephraimelgrabli
 
 permissions:
   contents: read
@@ -85,8 +86,9 @@ jobs:
           build-args: |
             BUILD_FROM=${{ steps.base.outputs.image }}
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          container-registry-username: ${{ env.IMAGE_OWNER }}
           context: codex
-          image: ${{ matrix.image }}
+          image: ghcr.io/${{ env.IMAGE_OWNER }}/${{ matrix.arch }}-${{ env.IMAGE_NAME }}
           image-tags: |
             ${{ needs.init.outputs.version }}
             latest
@@ -110,6 +112,7 @@ jobs:
         with:
           architectures: ${{ env.ARCHITECTURES }}
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          container-registry-username: ${{ env.IMAGE_OWNER }}
           image-name: ${{ env.IMAGE_NAME }}
           image-tags: |
             ${{ needs.init.outputs.version }}
